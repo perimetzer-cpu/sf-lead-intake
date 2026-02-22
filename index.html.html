@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BML Law – פנייה חכמה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-pale: rgba(201,168,76,0.12);
+  --navy: #0b1623;
+  --navy-2: #152032;
+  --navy-3: #1e2f44;
+  --white: #ffffff;
+  --text: rgba(255,255,255,0.85);
+  --muted: rgba(255,255,255,0.4);
+  --border: rgba(255,255,255,0.08);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.08);
+  --green-border: rgba(74,222,128,0.25);
+  --error: #f87171;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Heebo', sans-serif;
+  background: var(--navy);
+  min-height: 100vh;
+  direction: rtl;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── Background ── */
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 5%, rgba(201,168,76,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 85% 95%, rgba(201,168,76,0.04) 0%, transparent 55%),
+    linear-gradient(170deg, #0b1623 0%, #152032 60%, #0b1623 100%);
+}
+.bg::after {
+  content:'';
+  position:absolute; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9a84c' fill-opacity='0.025' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── Layout ── */
+.wrap {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24px 16px 80px;
+}
+
+/* ── Header ── */
+.hdr {
+  width: 100%; max-width: 640px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 40px;
+}
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-mark {
+  width:44px; height:44px; border-radius:10px;
+  background: linear-gradient(135deg, var(--gold), #8a6020);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond', serif;
+  font-weight:600; font-size:17px; color:var(--navy);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.25);
+  flex-shrink:0;
+}
+.logo-info .name { font-size:18px; font-weight:800; color:white; letter-spacing:.5px; }
+.logo-info .sub { font-size:11px; color:var(--gold); letter-spacing:2px; text-transform:uppercase; }
+.hdr-tel { color:var(--gold); font-size:13px; text-decoration:none; display:flex; align-items:center; gap:6px; }
+.hdr-tel:hover { color:var(--gold-light); }
+
+/* ── Progress dots ── */
+.dots {
+  display:flex; gap:8px; align-items:center;
+  margin-bottom:32px;
+}
+.dot {
+  width:8px; height:8px; border-radius:50%;
+  background: var(--border);
+  transition: all .3s;
+}
+.dot.done { background: var(--gold); transform:scale(1.2); }
+.dot.active { background: var(--gold-light); box-shadow:0 0 10px rgba(201,168,76,0.5); transform:scale(1.4); }
+
+/* ── Card ── */
+.card {
+  width:100%; max-width:640px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 20px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+.card-top {
+  padding: 28px 32px 20px;
+  background: linear-gradient(to bottom, rgba(201,168,76,0.04), transparent);
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  font-size:11px; color:var(--gold); letter-spacing:2px;
+  text-transform:uppercase; margin-bottom:6px; font-weight:600;
+}
+.step-title { font-size:24px; font-weight:700; color:white; margin-bottom:4px; }
+.step-sub { font-size:13px; color:var(--muted); line-height:1.5; }
+.card-body { padding:28px 32px; }
+
+/* ── Fields ── */
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fg { margin-bottom:18px; }
+label {
+  display:block; margin-bottom:7px;
+  font-size:12px; font-weight:700; color:var(--muted);
+  letter-spacing:.8px; text-transform:uppercase;
+}
+label .req { color:var(--gold); }
+input[type=text], input[type=tel], input[type=email], input[type=date], input[type=number], select, textarea {
+  width:100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius:10px;
+  padding:13px 15px;
+  font-size:15px; font-family:'Heebo',sans-serif;
+  color:white; direction:rtl; outline:none;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.05);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+}
+input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.2); }
+select option { background:var(--navy-2); }
+textarea { resize:vertical; min-height:80px; }
+.hint { font-size:11px; color:var(--muted); margin-top:5px; }
+.err-msg { font-size:11px; color:var(--error); margin-top:4px; display:none; }
+.fg.has-err input, .fg.has-err select { border-color:var(--error); }
+.fg.has-err .err-msg { display:block; }
+
+/* ── Upload Zone ── */
+.upload-wrap { position:relative; }
+.upload-zone {
+  border: 2px dashed rgba(201,168,76,0.25);
+  border-radius:14px; padding:32px 20px; text-align:center;
+  cursor:pointer; transition:all .25s;
+  background: rgba(201,168,76,0.015);
+  position:relative; overflow:hidden;
+}
+.upload-zone:hover, .upload-zone.over {
+  border-color:var(--gold);
+  background: rgba(201,168,76,0.06);
+}
+.upload-zone input[type=file] {
+  position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+}
+.uz-icon { font-size:32px; margin-bottom:10px; }
+.uz-title { font-size:15px; font-weight:700; color:white; margin-bottom:4px; }
+.uz-sub { font-size:12px; color:var(--muted); }
+.ai-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--gold-pale); border:1px solid rgba(201,168,76,0.25);
+  border-radius:20px; padding:3px 12px;
+  font-size:11px; color:var(--gold); font-weight:700;
+  letter-spacing:.5px; margin-top:10px;
+}
+
+/* Scanning overlay */
+.scan-ov {
+  position:absolute; inset:0; border-radius:14px;
+  background:rgba(11,22,35,0.88); backdrop-filter:blur(4px);
+  display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  z-index:5;
+}
+.scan-ov.on { display:flex; }
+.scan-ring {
+  width:52px; height:52px; border-radius:50%;
+  border:3px solid rgba(201,168,76,0.15);
+  border-top-color:var(--gold);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.scan-label { font-size:13px; color:var(--gold); font-weight:600; }
+.scan-step { font-size:11px; color:var(--muted); }
+
+/* OCR Result */
+.ocr-box {
+  margin-top:16px;
+  background:var(--green-bg); border:1px solid var(--green-border);
+  border-radius:12px; padding:16px 18px;
+  display:none; animation:fadeUp .3s ease;
+}
+.ocr-box.show { display:block; }
+.ocr-head {
+  font-size:13px; font-weight:700; color:var(--green);
+  display:flex; align-items:center; gap:6px; margin-bottom:14px;
+}
+.ocr-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.ocr-item { display:flex; flex-direction:column; gap:3px; }
+.ocr-item .ol { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.ocr-item .ov { font-size:15px; color:white; font-weight:600; }
+.ocr-edit {
+  margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);
+  font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;
+}
+.ocr-edit-btn {
+  color:var(--gold); cursor:pointer; font-size:12px; font-weight:600;
+  background:none; border:none; font-family:'Heebo',sans-serif; padding:0;
+}
+
+/* ID Extract box */
+.id-box {
+  margin-top:16px;
+  background:rgba(99,179,237,0.06); border:1px solid rgba(99,179,237,0.2);
+  border-radius:12px; padding:16px 18px;
+  display:none; animation:fadeUp .3s ease;
+}
+.id-box.show { display:block; }
+.id-head { font-size:13px; font-weight:700; color:#90cdf4; display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+.id-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+/* File chips */
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.chip {
+  background:rgba(255,255,255,0.06); border:1px solid var(--border);
+  border-radius:8px; padding:7px 12px;
+  font-size:12px; color:rgba(255,255,255,0.6);
+  display:flex; align-items:center; gap:7px;
+}
+.chip .x { cursor:pointer; color:var(--muted); transition:color .2s; font-size:15px; }
+.chip .x:hover { color:var(--error); }
+
+/* ── Confirm/Edit fields ── */
+.confirm-section {
+  background: rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-radius:12px; padding:18px;
+  margin-bottom:18px;
+}
+.confirm-section h4 {
+  font-size:11px; color:var(--gold);
+  text-transform:uppercase; letter-spacing:1.5px;
+  margin-bottom:14px; font-weight:700;
+}
+.cf-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cf-item { display:flex; flex-direction:column; gap:4px; }
+.cf-item .cl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.cf-item .cv { font-size:14px; color:white; font-weight:500; }
+.cf-item input {
+  font-size:14px; padding:9px 12px;
+}
+
+/* ── Signature ── */
+.sig-wrap {
+  border:1.5px solid rgba(201,168,76,0.2);
+  border-radius:12px; overflow:hidden;
+}
+.sig-bar {
+  background:rgba(201,168,76,0.05);
+  border-bottom:1px solid rgba(201,168,76,0.1);
+  padding:9px 14px;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:11px; color:var(--muted);
+}
+canvas#sig {
+  display:block; width:100%; height:160px;
+  cursor:crosshair; background:white; touch-action:none;
+}
+.sig-foot {
+  background:rgba(201,168,76,0.03);
+  border-top:1px solid rgba(201,168,76,0.1);
+  padding:9px 14px; display:flex; justify-content:flex-end;
+}
+.btn-clr {
+  background:none; border:1px solid var(--border);
+  color:var(--muted); border-radius:6px; padding:5px 12px;
+  font-size:12px; cursor:pointer; font-family:'Heebo',sans-serif;
+  transition:all .2s;
+}
+.btn-clr:hover { border-color:var(--error); color:var(--error); }
+
+/* ── Consent ── */
+.consent {
+  background:var(--gold-pale); border:1px solid rgba(201,168,76,0.15);
+  border-radius:10px; padding:16px; margin-bottom:14px;
+}
+.consent label {
+  display:flex; gap:10px; align-items:flex-start;
+  cursor:pointer; text-transform:none; letter-spacing:0;
+  font-size:13px; color:rgba(255,255,255,0.6); font-weight:400; margin:0;
+}
+.consent input[type=checkbox] { width:17px; height:17px; flex-shrink:0; accent-color:var(--gold); cursor:pointer; margin-top:1px; }
+.consent label a { color:var(--gold); text-decoration:none; }
+
+/* ── Buttons ── */
+.btn-row {
+  display:flex; gap:10px;
+  margin-top:28px; padding-top:22px;
+  border-top:1px solid var(--border);
+}
+.btn {
+  padding:13px 24px; border-radius:10px;
+  font-size:15px; font-weight:700; font-family:'Heebo',sans-serif;
+  cursor:pointer; border:none; transition:all .22s;
+  display:flex; align-items:center; gap:7px;
+}
+.btn-primary {
+  background:linear-gradient(135deg, var(--gold), #8a6020);
+  color:var(--navy); flex:1; justify-content:center;
+  box-shadow:0 4px 18px rgba(201,168,76,0.25);
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(201,168,76,0.35); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn-back {
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  color:rgba(255,255,255,0.5);
+}
+.btn-back:hover { background:rgba(255,255,255,0.07); color:white; }
+
+/* ── Success ── */
+.success { display:none; text-align:center; padding:12px 0 8px; }
+.success.on { display:block; animation:fadeUp .4s ease; }
+.suc-ring {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg, var(--gold), #8a6020);
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:0 auto 20px;
+  box-shadow:0 0 36px rgba(201,168,76,0.3);
+  animation:pop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.suc-title { font-size:26px; font-weight:800; color:white; margin-bottom:8px; }
+.suc-sub { font-size:14px; color:var(--muted); line-height:1.7; margin-bottom:22px; }
+.suc-ref {
+  display:inline-block;
+  background:var(--gold-pale); border:1px solid rgba(201,168,76,0.25);
+  border-radius:8px; padding:9px 18px;
+  font-size:13px; color:var(--gold); font-weight:700; margin-bottom:24px;
+}
+.suc-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+/* ── Chat ── */
+#chat { position:fixed; bottom:20px; left:20px; z-index:1000; }
+.chat-btn-wrap { position:relative; }
+.chat-pill {
+  position:absolute; bottom:58px; left:0;
+  background:white; color:var(--navy);
+  font-size:12px; font-weight:700;
+  padding:6px 14px; border-radius:20px;
+  white-space:nowrap; box-shadow:0 4px 16px rgba(0,0,0,0.2);
+  pointer-events:none;
+}
+.chat-pill::after {
+  content:''; position:absolute; bottom:-5px; left:18px;
+  border:5px solid transparent; border-top-color:white; border-bottom:none;
+}
+.chat-fab {
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg, var(--gold), #8a6020);
+  border:none; cursor:pointer; font-size:20px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 18px rgba(201,168,76,0.45);
+  transition:transform .2s;
+}
+.chat-fab:hover { transform:scale(1.08); }
+#chat-panel {
+  position:absolute; bottom:64px; left:0;
+  width:300px;
+  background:var(--navy-2);
+  border:1px solid rgba(201,168,76,0.18);
+  border-radius:14px; overflow:hidden;
+  box-shadow:0 16px 48px rgba(0,0,0,0.5);
+  display:none; flex-direction:column;
+}
+#chat-panel.on { display:flex; animation:fadeUp .2s ease; }
+.cp-head {
+  background:linear-gradient(135deg, var(--gold), #8a6020);
+  padding:12px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cp-title { font-size:13px; font-weight:800; color:var(--navy); }
+.cp-x { cursor:pointer; color:var(--navy); font-size:17px; opacity:.7; }
+.cp-msgs {
+  flex:1; padding:14px; max-height:220px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:9px;
+}
+.cm { padding:9px 13px; border-radius:10px; font-size:13px; max-width:88%; line-height:1.5; }
+.cm.bot { background:rgba(255,255,255,0.07); color:white; align-self:flex-start; }
+.cm.usr { background:var(--gold); color:var(--navy); align-self:flex-end; font-weight:700; }
+.cp-inp {
+  display:flex; gap:8px; padding:10px;
+  border-top:1px solid var(--border);
+}
+.cp-inp input {
+  flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  border-radius:8px; padding:8px 11px; font-size:13px; color:white; direction:rtl;
+  font-family:'Heebo',sans-serif;
+}
+.cp-inp input:focus { outline:none; border-color:var(--gold); }
+.cp-send {
+  width:34px; height:34px; border-radius:8px;
+  background:var(--gold); border:none; cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* ── Admin ── */
+#adm-ov {
+  position:fixed; inset:0; z-index:2000;
+  background:rgba(0,0,0,0.8); backdrop-filter:blur(8px);
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+#adm-ov.on { display:flex; }
+.adm-box {
+  background:var(--navy-2); border:1px solid rgba(201,168,76,0.18);
+  border-radius:18px; width:100%; max-width:860px; max-height:78vh;
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.adm-hdr {
+  padding:18px 24px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.adm-hdr h2 { font-size:18px; color:white; font-weight:700; }
+.adm-x { cursor:pointer; color:var(--muted); font-size:20px; }
+.adm-x:hover { color:white; }
+.adm-body { padding:20px 24px; overflow-y:auto; flex:1; }
+table.lt { width:100%; border-collapse:collapse; }
+table.lt th {
+  text-align:right; padding:9px 12px; font-size:11px;
+  color:var(--gold); text-transform:uppercase; letter-spacing:1px;
+  border-bottom:1px solid var(--border);
+}
+table.lt td { padding:11px 12px; font-size:13px; color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.03); }
+table.lt tr:hover td { color:white; background:rgba(255,255,255,0.02); }
+.sbadge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+.s-new { background:rgba(99,179,237,0.15); color:#90cdf4; }
+.s-done { background:rgba(74,222,128,0.12); color:#4ade80; }
+.al { color:var(--gold); text-decoration:none; font-size:12px; }
+.al:hover { text-decoration:underline; }
+
+/* ── Admin trigger ── */
+#adm-btn {
+  position:fixed; top:14px; left:14px; z-index:999;
+  background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  border-radius:7px; padding:5px 11px; cursor:pointer;
+  font-size:12px; color:var(--muted); font-family:'Heebo',sans-serif;
+  transition:all .2s;
+}
+#adm-btn:hover { color:white; background:rgba(255,255,255,0.07); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.panel { animation:fadeUp .3s ease; }
+
+@media(max-width:560px){
+  .card-body,.card-top{padding:20px 18px;}
+  .row2,.ocr-grid,.cf-grid,.id-grid{grid-template-columns:1fr;}
+  .hdr{flex-direction:column;gap:12px;padding-bottom:24px;}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<button id="adm-btn" onclick="openAdm()">🔐 ניהול</button>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="hdr">
+    <div class="logo">
+      <div class="logo-mark">BML</div>
+      <div class="logo-info">
+        <div class="name">BML LAW</div>
+        <div class="sub">משרד עורכי דין</div>
+      </div>
+    </div>
+    <a class="hdr-tel" href="tel:+972XXXXXXXX">📞 התקשרו אלינו</a>
+  </header>
+
+  <!-- Progress dots -->
+  <div class="dots">
+    <div class="dot active" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+    <div class="dot" id="d4"></div>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+    <div class="card-top">
+      <div class="step-num" id="stepNum">שלב 1 מתוך 4</div>
+      <div class="step-title" id="stepTitle">פרטים בסיסיים</div>
+      <div class="step-sub" id="stepSub">שלושה שדות בלבד – השאר יושלם אוטומטית</div>
+    </div>
+    <div class="card-body">
+
+      <!-- ══ STEP 1 ══ -->
+      <div id="s1" class="panel">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.7;background:var(--gold-pale);border:1px solid rgba(201,168,76,0.15);border-radius:10px;padding:14px 16px;">
+          ✨ <strong style="color:var(--gold);">מילוי חכם:</strong> מלאו 4 שדות בלבד. בשלב הבא תעלו תמונות של הדוח והת"ז – הבינה המלאכותית תשלים את כל הפרטים עבורכם.
+        </p>
+
+        <div class="row2">
+          <div class="fg" id="fg-fn">
+            <label><span class="req">* </span>שם פרטי</label>
+            <input type="text" id="fn" placeholder="ישראל">
+            <div class="err-msg">שדה חובה</div>
+          </div>
+          <div class="fg" id="fg-ln">
+            <label><span class="req">* </span>שם משפחה</label>
+            <input type="text" id="ln" placeholder="ישראלי">
+            <div class="err-msg">שדה חובה</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fg" id="fg-ph">
+            <label><span class="req">* </span>טלפון נייד</label>
+            <input type="tel" id="ph" placeholder="050-0000000">
+            <div class="err-msg">מספר לא תקין</div>
+          </div>
+          <div class="fg" id="fg-id">
+            <label><span class="req">* </span>מספר זהות</label>
+            <input type="text" id="idv" placeholder="000000000" maxlength="9">
+            <div class="err-msg">9 ספרות נדרשות</div>
+          </div>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-end">
+          <button class="btn btn-primary" onclick="go(2)">המשך להעלאת מסמכים ←</button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2 ══ -->
+      <div id="s2" class="panel" style="display:none">
+
+        <!-- Ticket upload -->
+        <div class="fg">
+          <label>📄 תמונת הדוח <span class="req">*</span></label>
+          <div class="upload-wrap">
+            <div class="upload-zone" id="uz-ticket" ondragover="dov(event,this)" ondragleave="dlv(this)" ondrop="ddrop(event,'tf','uz-ticket')">
+              <input type="file" id="tf" accept="image/*,.pdf" onchange="onTicket(this)">
+              <div class="scan-ov" id="scan-ticket">
+                <div class="scan-ring"></div>
+                <div class="scan-label">סורק דוח תנועה...</div>
+                <div class="scan-step" id="scan-step-ticket">מזהה טקסט...</div>
+              </div>
+              <div class="uz-icon">🔍</div>
+              <div class="uz-title">העלה תמונת דוח</div>
+              <div class="uz-sub">JPG / PNG / PDF</div>
+              <div class="ai-tag">✨ OCR – מילוי אוטומטי</div>
+            </div>
+            <div class="chips" id="chip-ticket"></div>
+          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.3);text-align:center;">
+            לא חובה – ניתן למלא את פרטי הדוח ידנית בשלב הבא
+          </div>
+          </div>
+          <div class="ocr-box" id="ocr-box">
+            <div class="ocr-head">✅ הדוח נסרק בהצלחה</div>
+            <div class="ocr-grid">
+              <div class="ocr-item"><span class="ol">מספר דוח</span><span class="ov" id="ocr-tn">—</span></div>
+              <div class="ocr-item"><span class="ol">סכום קנס</span><span class="ov" id="ocr-am">—</span></div>
+              <div class="ocr-item"><span class="ol">תאריך</span><span class="ov" id="ocr-dt">—</span></div>
+              <div class="ocr-item"><span class="ol">מספר רכב</span><span class="ov" id="ocr-pl">—</span></div>
+              <div class="ocr-item"><span class="ol">עיר</span><span class="ov" id="ocr-ct">—</span></div>
+              <div class="ocr-item"><span class="ol">סוג עבירה</span><span class="ov" id="ocr-vt">—</span></div>
+            </div>
+            <div class="ocr-edit">
+              <span>פרטים שגויים?</span>
+              <button class="ocr-edit-btn" onclick="toggleEditTicket()">✏️ ערוך ידנית</button>
+            </div>
+            <!-- Manual edit fields (hidden by default) -->
+            <div id="edit-ticket" style="display:none;margin-top:14px;">
+              <div class="row2" style="margin-bottom:0">
+                <div class="fg"><label>מספר דוח</label><input type="text" id="e-tn"></div>
+                <div class="fg"><label>סכום (₪)</label><input type="number" id="e-am"></div>
+                <div class="fg"><label>תאריך</label><input type="date" id="e-dt"></div>
+                <div class="fg"><label>מספר רכב</label><input type="text" id="e-pl"></div>
+                <div class="fg"><label>עיר</label><input type="text" id="e-ct"></div>
+                <div class="fg">
+                  <label>סוג עבירה</label>
+                  <select id="e-vt">
+                    <option value="">בחר...</option>
+                    <option>חניה אסורה</option>
+                    <option>מהירות מופרזת</option>
+                    <option>אי עצירה בתמרור עצור</option>
+                    <option>שימוש בטלפון בנהיגה</option>
+                    <option>חצייה בקו רצוף</option>
+                    <option>אחר</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="applyEditTicket()">✓ אשר עריכה</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ID upload -->
+        <div class="fg">
+          <label>🪪 תעודת זהות <span style="color:var(--muted);font-weight:400;font-size:11px;text-transform:none">(רשות – לחילוץ כתובת ות.לידה)</span></label>
+          <div class="upload-wrap">
+            <div class="upload-zone" id="uz-id" ondragover="dov(event,this)" ondragleave="dlv(this)" ondrop="ddrop(event,'idf','uz-id')">
+              <input type="file" id="idf" accept="image/*" onchange="onID(this)">
+              <div class="scan-ov" id="scan-id">
+                <div class="scan-ring"></div>
+                <div class="scan-label">סורק ת"ז...</div>
+                <div class="scan-step">מחלץ נתונים אישיים...</div>
+              </div>
+              <div class="uz-icon">🪪</div>
+              <div class="uz-title">צילום ת"ז (שני צדדים)</div>
+              <div class="uz-sub">JPG / PNG</div>
+              <div class="ai-tag">✨ OCR – כתובת ות.לידה</div>
+            </div>
+            <div class="chips" id="chip-id"></div>
+          </div>
+          <div class="id-box" id="id-box">
+            <div class="id-head">✅ ת"ז נסרקה בהצלחה</div>
+            <div class="id-grid">
+              <div class="ocr-item"><span class="ol">כתובת</span><span class="ov" id="id-addr">—</span></div>
+              <div class="ocr-item"><span class="ol">תאריך לידה</span><span class="ov" id="id-dob">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-back" onclick="go(1)">→ חזרה</button>
+          <button class="btn btn-primary" id="btn-s2" onclick="go(3)">המשך לאישור ←</button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3 ══ -->
+      <div id="s3" class="panel" style="display:none">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">
+          בדקו את הנתונים שחולצו אוטומטית. ניתן לערוך כל שדה לפני החתימה.
+        </p>
+
+        <!-- Personal -->
+        <div class="confirm-section">
+          <h4>👤 פרטים אישיים</h4>
+          <div class="cf-grid">
+            <div class="cf-item"><span class="cl">שם פרטי</span><input class="cf-inp" type="text" id="cf-fn"></div>
+            <div class="cf-item"><span class="cl">שם משפחה</span><input class="cf-inp" type="text" id="cf-ln"></div>
+            <div class="cf-item"><span class="cl">מספר זהות</span><input class="cf-inp" type="text" id="cf-id"></div>
+            <div class="cf-item"><span class="cl">טלפון</span><input class="cf-inp" type="tel" id="cf-ph"></div>
+            <div class="cf-item"><span class="cl">כתובת</span><input class="cf-inp" type="text" id="cf-addr" placeholder="—"></div>
+            <div class="cf-item"><span class="cl">תאריך לידה</span><input class="cf-inp" type="text" id="cf-dob" placeholder="—"></div>
+          </div>
+        </div>
+
+        <!-- Ticket -->
+        <div class="confirm-section">
+          <h4>📄 פרטי הדוח</h4>
+          <div class="cf-grid">
+            <div class="cf-item"><span class="cl">מספר דוח</span><input class="cf-inp" type="text" id="cf-tn"></div>
+            <div class="cf-item"><span class="cl">סכום קנס (₪)</span><input class="cf-inp" type="number" id="cf-am"></div>
+            <div class="cf-item"><span class="cl">תאריך</span><input class="cf-inp" type="text" id="cf-dt"></div>
+            <div class="cf-item"><span class="cl">מספר רכב</span><input class="cf-inp" type="text" id="cf-pl"></div>
+            <div class="cf-item"><span class="cl">עיר</span><input class="cf-inp" type="text" id="cf-ct"></div>
+            <div class="cf-item"><span class="cl">סוג עבירה</span><input class="cf-inp" type="text" id="cf-vt"></div>
+          </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="fg">
+          <label>✍️ חתימה דיגיטלית</label>
+          <div class="sig-wrap">
+            <div class="sig-bar">
+              <span>חתמו בתוך האזור</span>
+              <span style="color:var(--gold);font-size:11px;">ייפוי כוח – ייצוג משפטי</span>
+            </div>
+            <canvas id="sig" width="600" height="160"></canvas>
+            <div class="sig-foot">
+              <button class="btn-clr" onclick="clearSig()">🗑 נקה</button>
+            </div>
+          </div>
+          <div class="hint">חתמו עם האצבע (נייד) או עכבר (מחשב)</div>
+        </div>
+
+        <div class="consent">
+          <label><input type="checkbox" id="c1"> <span>אני מאשר/ת את תנאי הייצוג המשפטי ומסמיך/ה את משרד BML לפעול בשמי. <a href="#">קרא/י תנאים מלאים</a></span></label>
+        </div>
+        <div class="consent">
+          <label><input type="checkbox" id="c2"> <span>אני מסכים/ה לשמירת המידע במערכת ניהול הלקוחות של המשרד.</span></label>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-back" onclick="go(2)">→ חזרה</button>
+          <button class="btn btn-primary" onclick="submitForm()">📤 שליחה ויצירת ייפוי כוח</button>
+        </div>
+      </div>
+
+      <!-- ══ SUCCESS ══ -->
+      <div id="suc" class="success">
+        <div class="suc-ring">✓</div>
+        <div class="suc-title">הפנייה נשלחה! 🎉</div>
+        <div class="suc-sub">
+          תיקך נפתח במשרד ונשמר ב-Salesforce.<br>
+          ייפוי הכוח הופק ועוד מעט יישלח למייל שלך.<br>
+          נציג יחזור אליך תוך 24 שעות עבודה.
+        </div>
+        <div class="suc-ref" id="suc-ref">מספר תיק: טוען...</div>
+        <div class="suc-btns">
+          <button class="btn btn-primary" onclick="dlPDF()">⬇ הורד ייפוי כוח PDF</button>
+          <button class="btn btn-back" onclick="location.reload()">+ פנייה חדשה</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Chat -->
+<div id="chat">
+  <div id="chat-panel">
+    <div class="cp-head">
+      <div class="cp-title">💬 BML Law – שירות לקוחות</div>
+      <span class="cp-x" onclick="toggleChat()">✕</span>
+    </div>
+    <div class="cp-msgs" id="cp-msgs">
+      <div class="cm bot">שלום! אני כאן לעזור בכל שאלה. 😊</div>
+    </div>
+    <div class="cp-inp">
+      <input type="text" id="cp-in" placeholder="כתוב הודעה..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="cp-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+  <div class="chat-btn-wrap">
+    <div class="chat-pill" id="cp-pill">צ'אט עם המשרד</div>
+    <button class="chat-fab" onclick="toggleChat()">💬</button>
+  </div>
+</div>
+
+<!-- Admin -->
+<div id="adm-ov">
+  <div class="adm-box">
+    <div class="adm-hdr">
+      <h2>🔐 לוח ניהול – לידים</h2>
+      <span class="adm-x" onclick="closeAdm()">✕</span>
+    </div>
+    <div class="adm-body">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th>תאריך</th><th>שם</th><th>דוח</th><th>קנס</th><th>סטטוס</th><th>Drive</th><th>SF</th>
+          </tr>
+        </thead>
+        <tbody id="adm-tb"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyusYs10lgl0SkMntYhQBFGpoT5iU0nCzxty3f2hQ_zYjsDxWLCUTovmpDIxZW3kHaw/exec';
+const SF_OID  = '00D9k000001XJEb';
+const SF_URL  = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let cur = 1;
+let sigCtx, sigCanvas, drawing = false, lx = 0, ly = 0, sigData = null;
+let ocr = {};   // ticket OCR data
+let idOcr = {}; // ID OCR data
+const leads = JSON.parse(localStorage.getItem('bml_leads')||'[]');
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+const stepMeta = [
+  {},
+  { num:'שלב 1 מתוך 3', title:'פרטים בסיסיים', sub:'ארבעה שדות בלבד – השאר יושלם אוטומטית' },
+  { num:'שלב 2 מתוך 3', title:'העלאת מסמכים', sub:'העלו תמונות – הבינה המלאכותית תמלא הכל' },
+  { num:'שלב 3 מתוך 3', title:'אישור וחתימה',  sub:'בדקו, ערכו אם צריך, וחתמו' },
+];
+
+function go(n) {
+  if (n > cur && !validate(cur)) return;
+  for (let i=1;i<=3;i++) {
+    const el = document.getElementById('s'+i);
+    if(el) el.style.display='none';
+  }
+  document.getElementById('suc').classList.remove('on');
+  const el = document.getElementById('s'+n);
+  if (el) el.style.display='block';
+
+  const m = stepMeta[n];
+  document.getElementById('stepNum').textContent   = m.num;
+  document.getElementById('stepTitle').textContent = m.title;
+  document.getElementById('stepSub').textContent   = m.sub;
+
+  // Dots
+  for(let i=1;i<=4;i++){
+    const d=document.getElementById('d'+i);
+    if(!d) continue;
+    d.className='dot';
+    if(i<n) d.classList.add('done');
+    else if(i===n) d.classList.add('active');
+  }
+
+  if(n===3) { fillConfirm(); setTimeout(initSig,80); }
+  cur=n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+// VALIDATION
+// ═══════════════════════════════════════
+function validate(n) {
+  if (n===1) {
+    let ok=true;
+    const checks = [
+      { id:'fn', fg:'fg-fn', test: v=>v.length>0 },
+      { id:'ln', fg:'fg-ln', test: v=>v.length>0 },
+      { id:'ph', fg:'fg-ph', test: v=>v.replace(/\D/g,'').length>=9 },
+      { id:'idv',fg:'fg-id', test: v=>v.length===9 },
+    ];
+    checks.forEach(c=>{
+      const v=document.getElementById(c.id).value.trim();
+      const fg=document.getElementById(c.fg);
+      if(c.test(v)){ fg.classList.remove('has-err'); }
+      else { fg.classList.add('has-err'); ok=false; }
+    });
+    return ok;
+  }
+  if (n===2) {
+    // Allow proceeding even without OCR - user can fill manually in step 3
+    return true;
+  }
+  if (n===3) {
+    if(!sigData){ alert('נא לחתום'); return false; }
+    if(!document.getElementById('c1').checked){ alert('יש לאשר תנאי ייצוג'); return false; }
+    if(!document.getElementById('c2').checked){ alert('יש לאשר שמירת מידע'); return false; }
+    return true;
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════
+// OCR – TICKET
+// ═══════════════════════════════════════
+const scanSteps = ['מזהה טקסט...','מחלץ מספר דוח...','מחלץ סכום קנס...','מחלץ תאריך ורכב...','מסיים...'];
+
+async function onTicket(input) {
+  if(!input.files.length) return;
+  const file = input.files[0];
+  addChip(file, 'chip-ticket');
+  const ov = document.getElementById('scan-ticket');
+  const stepEl = document.getElementById('scan-step-ticket');
+  ov.classList.add('on');
+  document.getElementById('ocr-box').classList.remove('show');
+
+  let s=0;
+  const interval = setInterval(()=>{
+    if(s < scanSteps.length){ stepEl.textContent=scanSteps[s++]; }
+  }, 500);
+
+  try {
+    stepEl.textContent = 'ממיר קובץ...';
+    const isPDF = file.type === 'application/pdf';
+    let fullText = '';
+
+    if (isPDF) {
+      // For PDF: convert to image first using canvas, then send to Vision
+      stepEl.textContent = 'ממיר PDF לתמונה...';
+      const pdfBase64 = await fileToBase64(file);
+      // Use pdf.js to render first page
+      if (!window.pdfjsLib) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+        document.head.appendChild(script);
+        await new Promise(r => script.onload = r);
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+      
+      const pdfData = atob(pdfBase64.split(',')[1]);
+      const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+      const page = await pdfDoc.getPage(1);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      const imageContent = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
+
+      stepEl.textContent = 'שולח לניתוח AI...';
+      const visionRes = await fetch(
+        'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyDxJRk4KStDhdI4h8S_TCq65KprKlMnGw0',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requests: [{
+              image: { content: imageContent },
+              features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }]
+            }]
+          })
+        }
+      );
+      const visionData = await visionRes.json();
+      fullText = visionData.responses?.[0]?.fullTextAnnotation?.text || '';
+
+    } else {
+      // Image file – send directly
+      const base64 = await fileToBase64(file);
+      const imageContent = base64.split(',')[1];
+      stepEl.textContent = 'שולח לניתוח AI...';
+      const visionRes = await fetch(
+        'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyDxJRk4KStDhdI4h8S_TCq65KprKlMnGw0',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requests: [{
+              image: { content: imageContent },
+              features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }]
+            }]
+          })
+        }
+      );
+      const visionData = await visionRes.json();
+      fullText = visionData.responses?.[0]?.fullTextAnnotation?.text || '';
+    }
+
+    console.log('=== Vision OCR Text ===', fullText);
+    stepEl.textContent = 'מנתח נתוני דוח...';
+    ocr = parseTicketText(fullText);
+
+  } catch(err) {
+    console.error('OCR error:', err);
+    ocr = { ticketNum:'', amount:'', date:'', dateISO:'', plate:'', city:'', violation:'' };
+  }
+
+  clearInterval(interval);
+  ov.classList.remove('on');
+
+  document.getElementById('ocr-tn').textContent = ocr.ticketNum || '(לא זוהה – ערוך ידנית)';
+  document.getElementById('ocr-am').textContent = ocr.amount ? '₪'+ocr.amount : '(לא זוהה)';
+  document.getElementById('ocr-dt').textContent = ocr.date || '(לא זוהה)';
+  document.getElementById('ocr-pl').textContent = ocr.plate || '(לא זוהה)';
+  document.getElementById('ocr-ct').textContent = ocr.city || '(לא זוהה)';
+  document.getElementById('ocr-vt').textContent = ocr.violation || '(לא זוהה)';
+
+  document.getElementById('ocr-box').classList.add('show');
+  document.getElementById('btn-s2').disabled = false;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function parseTicketText(text) {
+  const find = (patterns) => {
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m && m[1]) return m[1].trim();
+    }
+    return '';
+  };
+
+  const ticketNum = find([
+    /\*([\d]{8,15})\*/,
+    /מספר הודעת תשלום קנס[\s\S]{0,40}([\d]{8,15})/,
+    /מספר דוח[:\s]+([\d]{5,15})/,
+  ]);
+
+  const amountRaw = find([
+    /סכום לתשלום[\s\S]{0,20}?([\d]{3,6})/,
+    /₪\s*([\d]{3,6})/,
+    /([\d]{3,6})\s*₪/,
+  ]);
+  const amount = amountRaw ? amountRaw.replace(/[^\d]/g,'') : '';
+
+  const dateRaw = find([
+    /בתאריך\s+(\d{2}[.\/]\d{2}[.\/]\d{4})/,
+    /(\d{2}[.\/]\d{2}[.\/]\d{4})/,
+  ]);
+  let dateISO = '';
+  if(dateRaw) {
+    const parts = dateRaw.split(/[\.\//]/);
+    if(parts.length===3) dateISO = parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+  }
+
+  const plate = find([
+    /מס['"]?\s*הרכב\s+([\d][\d\-]{4,10})/,
+    /(\d{2,3}[-–]\d{2,3}[-–]\d{2,3})/,
+  ]);
+
+  const cityList = ['תל אביב','ירושלים','חיפה','רמת גן','פתח תקווה','ראשון לציון','נתניה','אשדוד','באר שבע','בני ברק','הרצליה','כפר סבא'];
+  let city = '';
+  for(const c of cityList){ if(text.includes(c)){ city=c; break; } }
+
+  let violation = '';
+  if(/רמזור|אדום|6528/.test(text))      violation='אי עצירה ברמזור אדום';
+  else if(/מהירות/.test(text))           violation='מהירות מופרזת';
+  else if(/חניה|חנייה/.test(text))       violation='חניה אסורה';
+  else if(/טלפון|סלולר/.test(text))     violation='שימוש בטלפון בנהיגה';
+  else if(/עצור|תמרור/.test(text))      violation='אי עצירה בתמרור עצור';
+  else if(/קו רצוף/.test(text))         violation='חצייה בקו רצוף';
+
+  return { ticketNum, amount, date: dateRaw||'', dateISO, plate, city, violation };
+}
+
+function simulateTicketOCR() {
+  return { ticketNum:'', amount:'', date:'', dateISO:'', plate:'', city:'', violation:'' };
+}
+
+function toggleEditTicket() {
+  const el = document.getElementById('edit-ticket');
+  const open = el.style.display==='block';
+  el.style.display = open ? 'none' : 'block';
+  if(!open){
+    document.getElementById('e-tn').value = ocr.ticketNum||'';
+    document.getElementById('e-am').value = ocr.amount||'';
+    document.getElementById('e-dt').value = ocr.dateISO||'';
+    document.getElementById('e-pl').value = ocr.plate||'';
+    document.getElementById('e-ct').value = ocr.city||'';
+    document.getElementById('e-vt').value = ocr.violation||'';
+  }
+}
+
+function applyEditTicket() {
+  ocr.ticketNum = document.getElementById('e-tn').value;
+  ocr.amount    = document.getElementById('e-am').value;
+  ocr.date      = document.getElementById('e-dt').value;
+  ocr.dateISO   = document.getElementById('e-dt').value;
+  ocr.plate     = document.getElementById('e-pl').value;
+  ocr.city      = document.getElementById('e-ct').value;
+  ocr.violation = document.getElementById('e-vt').value;
+  document.getElementById('ocr-tn').textContent = ocr.ticketNum;
+  document.getElementById('ocr-am').textContent = '₪'+ocr.amount;
+  document.getElementById('ocr-dt').textContent = ocr.date;
+  document.getElementById('ocr-pl').textContent = ocr.plate;
+  document.getElementById('ocr-ct').textContent = ocr.city;
+  document.getElementById('ocr-vt').textContent = ocr.violation;
+  document.getElementById('edit-ticket').style.display='none';
+}
+
+// ═══════════════════════════════════════
+// OCR – ID
+// ═══════════════════════════════════════
+function onID(input) {
+  if(!input.files.length) return;
+  addChip(input.files[0], 'chip-id');
+  document.getElementById('scan-id').classList.add('on');
+  document.getElementById('id-box').classList.remove('show');
+
+  setTimeout(()=>{
+    document.getElementById('scan-id').classList.remove('on');
+    // Simulate ID OCR
+    idOcr = {
+      address: 'רחוב הרצל 12, תל אביב',
+      dob: '01/01/1990',
+    };
+    document.getElementById('id-addr').textContent = idOcr.address;
+    document.getElementById('id-dob').textContent  = idOcr.dob;
+    document.getElementById('id-box').classList.add('show');
+  }, 1800);
+}
+
+// ═══════════════════════════════════════
+// FILL CONFIRM STEP
+// ═══════════════════════════════════════
+function fillConfirm() {
+  const g = id => document.getElementById(id);
+  g('cf-fn').value   = g('fn').value;
+  g('cf-ln').value   = g('ln').value;
+  g('cf-id').value   = g('idv').value;
+  g('cf-ph').value   = g('ph').value;
+  g('cf-addr').value = idOcr.address || '';
+  g('cf-dob').value  = idOcr.dob || '';
+  g('cf-tn').value   = ocr.ticketNum || '';
+  g('cf-am').value   = ocr.amount || '';
+  g('cf-dt').value   = ocr.date || '';
+  g('cf-pl').value   = ocr.plate || '';
+  g('cf-ct').value   = ocr.city || '';
+  g('cf-vt').value   = ocr.violation || '';
+}
+
+function getFinalData() {
+  const g = id => document.getElementById(id)?.value?.trim()||'';
+  return {
+    firstName:    g('cf-fn'),
+    lastName:     g('cf-ln'),
+    idNum:        g('cf-id'),
+    phone:        g('cf-ph'),
+    address:      g('cf-addr'),
+    birthDate:    g('cf-dob'),
+    ticketNum:    g('cf-tn'),
+    ticketAmount: g('cf-am'),
+    ticketDate:   g('cf-dt'),
+    licensePlate: g('cf-pl'),
+    ticketCity:   g('cf-ct'),
+    violationType:g('cf-vt'),
+  };
+}
+
+// ═══════════════════════════════════════
+// FILE UTILS
+// ═══════════════════════════════════════
+function addChip(file, containerId) {
+  const c = document.getElementById(containerId);
+  const d = document.createElement('div');
+  d.className='chip';
+  d.innerHTML=`<span>📄 ${file.name}</span><span class="x" onclick="this.parentElement.remove()">×</span>`;
+  c.appendChild(d);
+}
+function dov(e,el){ e.preventDefault(); el.classList.add('over'); }
+function dlv(el){ el.classList.remove('over'); }
+function ddrop(e, inputId, zoneId) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.remove('over');
+  const input = document.getElementById(inputId);
+  if(e.dataTransfer.files.length) {
+    const dt = new DataTransfer();
+    dt.items.add(e.dataTransfer.files[0]);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+}
+
+// ═══════════════════════════════════════
+// SIGNATURE
+// ═══════════════════════════════════════
+function initSig() {
+  sigCanvas = document.getElementById('sig');
+  if(!sigCanvas) return;
+  sigCtx = sigCanvas.getContext('2d');
+  const r = sigCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio||1;
+  sigCanvas.width  = r.width*dpr;
+  sigCanvas.height = 160*dpr;
+  sigCanvas.style.width  = r.width+'px';
+  sigCanvas.style.height = '160px';
+  sigCtx.scale(dpr,dpr);
+  sigCtx.fillStyle='#fff'; sigCtx.fillRect(0,0,sigCanvas.width,sigCanvas.height);
+  sigCtx.strokeStyle='#0b1623'; sigCtx.lineWidth=2.5; sigCtx.lineCap='round'; sigCtx.lineJoin='round';
+
+  const pos = e => { const r=sigCanvas.getBoundingClientRect(),s=e.touches?e.touches[0]:e; return{x:s.clientX-r.left,y:s.clientY-r.top}; };
+  sigCanvas.onmousedown = e=>{ drawing=true; const p=pos(e); sigCtx.beginPath(); sigCtx.moveTo(lx=p.x,ly=p.y); };
+  sigCanvas.onmousemove = e=>{ if(!drawing)return; const p=pos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); lx=p.x; ly=p.y; sigData=sigCanvas.toDataURL(); };
+  sigCanvas.onmouseup = sigCanvas.onmouseleave = ()=>drawing=false;
+  sigCanvas.addEventListener('touchstart',e=>{ e.preventDefault(); drawing=true; const p=pos(e); sigCtx.beginPath(); sigCtx.moveTo(lx=p.x,ly=p.y); },{passive:false});
+  sigCanvas.addEventListener('touchmove',e=>{ e.preventDefault(); if(!drawing)return; const p=pos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); lx=p.x;ly=p.y; sigData=sigCanvas.toDataURL(); },{passive:false});
+  sigCanvas.addEventListener('touchend',()=>drawing=false);
+}
+function clearSig(){
+  if(!sigCtx||!sigCanvas)return;
+  sigCtx.fillStyle='#fff'; sigCtx.fillRect(0,0,sigCanvas.width/window.devicePixelRatio,sigCanvas.height/window.devicePixelRatio);
+  sigData=null;
+}
+
+// ═══════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════
+async function submitForm() {
+  if(!validate(3)) return;
+  const data = getFinalData();
+
+  const btn = event.target;
+  btn.disabled=true; btn.textContent='⏳ שולח...';
+
+  try {
+    // GAS מטפל בכל: Drive + Sheets + Salesforce
+    const gasResult = await submitGAS(data);
+    const driveFolderUrl = gasResult?.folderUrl || '';
+    console.log('Drive folder:', driveFolderUrl);
+
+    const ref='BML-'+Date.now().toString(36).toUpperCase();
+    leads.unshift({ date:new Date().toLocaleDateString('he-IL'), name:data.firstName+' '+data.lastName, ticketNum:data.ticketNum, amount:'₪'+data.ticketAmount, status:'new', driveUrl:driveFolderUrl||'#', sfUrl:'#', ref });
+    localStorage.setItem('bml_leads', JSON.stringify(leads));
+
+    // Show success
+    for(let i=1;i<=3;i++){ const el=document.getElementById('s'+i); if(el)el.style.display='none'; }
+    document.getElementById('stepNum').textContent='';
+    document.getElementById('stepTitle').textContent='נשלח בהצלחה 🎉';
+    document.getElementById('stepSub').textContent='תיקך נפתח במשרד';
+    document.getElementById('suc').classList.add('on');
+    document.getElementById('suc-ref').textContent='מספר תיק: '+ref;
+    document.getElementById('progressFill') && (document.getElementById('progressFill').style.width='100%');
+    document.querySelectorAll('.dot').forEach(d=>{ d.className='dot done'; });
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(err) {
+    console.error(err);
+    btn.disabled=false; btn.textContent='📤 שליחה ויצירת ייפוי כוח';
+    alert('שגיאה בשליחה. נסו שנית.');
+  }
+}
+
+async function submitSF(data, driveFolderUrl) {
+  const driveLink = driveFolderUrl ? ' | Drive: ' + driveFolderUrl : '';
+  const body = new URLSearchParams({
+    oid: SF_OID,
+    retURL: 'https://bettylaw.co.il',
+    email: data.email || 'noemail@bettylaw.co.il',
+    first_name: data.firstName,
+    last_name:  data.lastName,
+    phone:      data.phone,
+    mobile:     data.phone,
+    city:       data.ticketCity,
+    description: `דוח: ${data.ticketNum} | קנס: ₪${data.ticketAmount} | רכב: ${data.licensePlate} | עיר: ${data.ticketCity} | עבירה: ${data.violationType}`,
+    lead_source:'Web',
+    company:    data.lastName + ' ' + data.firstName,
+    // שדה מותאם: קישור לתיקיית Drive (יש ליצור שדה בשם "Drive_Folder__c" ב-SF)
+    '00NWn000001S8Bl': driveFolderUrl || '',
+  });
+  await fetch(SF_URL, { method:'POST', body, mode:'no-cors' });
+  console.log('SF payload:', Object.fromEntries(body));
+}
+
+async function submitGAS(data) {
+  // שלב א: שלח מטא-דאטה בלבד (מהיר) → קבל folderUrl
+  const metaPayload = {
+    ...data,
+    signature: sigData,
+    timestamp: new Date().toISOString(),
+    files: {}, // ריק – הקבצים יישלחו בנפרד
+  };
+
+  let folderUrl = '';
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(metaPayload)
+    });
+    const text = await res.text();
+    console.log('GAS meta response:', text);
+    const result = JSON.parse(text);
+    folderUrl = result.folderUrl || '';
+
+    // שלב ב: שלח קבצים בנפרד ברקע (לא חוסם את הממשק)
+    uploadFilesInBackground(folderUrl, data);
+
+    return result;
+  } catch(e) {
+    console.error('GAS error:', e);
+    return {};
+  }
+}
+
+async function uploadFilesInBackground(folderUrl, data) {
+  if (!folderUrl) return;
+  try {
+    const files = {};
+    const ticketInput = document.getElementById('tf');
+    if(ticketInput?.files?.length) {
+      const b64 = await fileToBase64(ticketInput.files[0]);
+      files.ticket = { name: ticketInput.files[0].name, type: ticketInput.files[0].type, data: b64 };
+    }
+    const idInput = document.getElementById('idf');
+    if(idInput?.files?.length) {
+      const b64 = await fileToBase64(idInput.files[0]);
+      files.idCard = { name: idInput.files[0].name, type: idInput.files[0].type, data: b64 };
+    }
+
+    // שלח קבצים + חתימה + clientData למייל ול-Drive
+    const payload = {
+      action: 'uploadFiles',
+      folderUrl,
+      files,
+      signature: sigData,           // ייפוי כוח חתום
+      clientData: data,             // לשליחת המייל עם קבצים
+    };
+
+    await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    console.log('Files + signature uploaded OK');
+  } catch(e) {
+    console.error('File upload error:', e);
+  }
+}
+
+// ═══════════════════════════════════════
+// PDF
+// ═══════════════════════════════════════
+async function dlPDF() {
+  const data = getFinalData();
+  const now = new Date();
+  const dd = now.getDate();
+  const heMonths = ['','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const mm = now.getMonth()+1;
+  const yyyy = now.getFullYear();
+  const todaySimple = now.toLocaleDateString('he-IL');
+
+  const html = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Heebo', Arial, sans-serif;
+    direction: rtl; font-size: 11pt; color: #1a1a1a;
+    line-height: 1.7; padding: 0;
+  }
+  .header {
+    background: #0b1623; color: white;
+    padding: 16px 30px; text-align: center;
+  }
+  .header .firm { font-size: 18pt; font-weight: 800; letter-spacing: 2px; }
+  .header .sub { font-size: 9pt; color: #c9a84c; letter-spacing: 1px; margin-top: 3px; }
+  .gold-line { height: 3px; background: #c9a84c; }
+  .body { padding: 24px 36px; }
+  h1 {
+    text-align: center; font-size: 18pt; font-weight: 800;
+    color: #0b1623; margin: 18px 0 6px;
+  }
+  .title-line { width: 120px; height: 2px; background: #c9a84c; margin: 0 auto 20px; }
+  .client-box {
+    background: #faf7f0; border: 1px solid #c9a84c;
+    border-radius: 8px; padding: 14px 20px; margin-bottom: 20px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .client-box .field { font-size: 10.5pt; }
+  .client-box .field span { color: #666; font-size: 9.5pt; }
+  p { margin-bottom: 10px; text-align: justify; }
+  .section-title { font-weight: 700; margin: 14px 0 6px; }
+  ol { padding-right: 22px; }
+  ol li { margin-bottom: 8px; text-align: justify; }
+  .sig-area {
+    margin-top: 28px; display: flex; gap: 30px; justify-content: flex-start;
+  }
+  .sig-box {
+    border: 1px solid #ccc; border-radius: 6px;
+    width: 200px; text-align: center; overflow: hidden;
+  }
+  .sig-box img { width: 196px; height: 80px; object-fit: contain; }
+  .sig-box .sig-label {
+    border-top: 1px solid #eee; padding: 5px;
+    font-size: 9pt; color: #666;
+  }
+  .footer {
+    background: #0b1623; color: #c9a84c;
+    text-align: center; padding: 10px;
+    font-size: 8.5pt; margin-top: 30px;
+  }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="firm">BML LAW</div>
+  <div class="sub">בטי מצר-לוי ושות' – עורכי דין &nbsp;|&nbsp; bettylaw.co.il</div>
+</div>
+<div class="gold-line"></div>
+<div class="body">
+  <h1>יפוי כח</h1>
+  <div class="title-line"></div>
+
+  <div class="client-box">
+    <div class="field"><span>שם:</span> ${data.firstName} ${data.lastName}</div>
+    <div class="field"><span>ת.ז:</span> ${data.idNum}</div>
+    <div class="field"><span>טלפון:</span> ${data.phone}</div>
+    <div class="field"><span>כתובת:</span> ${data.address || '—'}</div>
+  </div>
+
+  <p>אני הח"מ &nbsp;<strong>${data.firstName} ${data.lastName}</strong>&nbsp; ת.ז &nbsp;<strong>${data.idNum}</strong></p>
+
+  <p>ממנה (ים) את עורכי הדין: <strong>בטי מצר-לוי</strong> ו/או <strong>רוית קרן-רוזין</strong> ו/או <strong>ליאת אלזנר</strong> ו/או <strong>אופיר דוד</strong> ו/או <strong>פרי מצר סולומון</strong> כולם יחד וכל אחד מהם לחוד, להיות בא(י) כחי(נו) ולהופיע ולפעול עבורי(נו) ובשמי(נו) ובמקומי(נו)</p>
+
+  <p>והנני(נו) מייפה(ים) את כוחם של מרשי(נו) הנ"ל להגיש תביעות, תביעות נגדיות, טענות, הגנות, תשובות, קובלנות, בקשות, המרצות, התנגדויות, התנגדויות צד ג', טענות צד ביניים, הזמנות פתיחה, לקבוע שאלות השנויות במחלוקת, לבקש פרטים, לבקש רשות לשינוי כתבי טענות ותיקונם, לבקש עיקולים זמניים ואישורם, מנוי מקבל נכסים, לשלוח הודעות פשיטת רגל, לבקש צירוף צד ג', לבקש רשות להצטרף בתור צד ג', לבקש איחוד משפטים וגם/או ערעורים, לשלוח הודעות, התראות או הזמנות, לעשות הופעות, לבקש הארכת מועדים ודחיות, לקבל הודעות והזמנות, להזמין עדים ולחקרם, לבקש הוראות מסמכים, עיון במסמכים, גלוי מסמכים, לדרוש הודאה במסמכים, וגם/או בעובדות, להציג שאלות בשאלונים, לבוא לידי פשרות והסכמים, להסכים לעוררי בוררות ולמינוי בורר, לבטל כל הליכים משפטיים וגם/או להפסיקם, לקבל כספים ולתת פטורים חלקיים או מלאים, להגיש קובלנות, להגיש כל כתבי טענות שהם ולעשות את כל הפעולות המשפטיות האדמיניסטרטיביות ואלו של הוצאה לפועל, לרבות לבקש עיכוב הוצאה לפועל בקשר עם נושאי יפוי כח זה.</p>
+
+  <p>עם הזכות להודות באשמה בשמי(נו) ולעשות בשמי(נו) את כל הפעולות הדרושות בקשר לניהול המשפט הנ"ל.</p>
+
+  <p class="section-title">בנוסף לכל האמור לעיל הינני(נו) מייפה(ים) את כוחם של מרשי(נו) הנ"ל כדלקמן:</p>
+  <ol>
+    <li>לבקש ולקבל חוות דעת רפואית מכל רופא או מוסד שבדק אותי(נו) או חוות דעת אחרת הנוגעת לענין הנ"ל.</li>
+    <li>לפנות לכל בית משפט, בית דין, יחידת משטרה, יחידת שירות בתי הסוהר, שלטונות מס הכנסה, המכס, משרד התחבורה או כל מוסד אחר, הן ממשלתי והן אחר בקשר לייצוגי(נו) הנ"ל ולקבל מהם כל מידע עלי(נו).</li>
+    <li>לפנות לכל בנק ולקבל ממנו מידע על חשבונותיי(נו) אצלו הנוגעים לעניין הנ"ל.</li>
+    <li>לייצגני(נו) בפלילים, להודות בשמי(נו) בכל עובדה שימצאו לנכון, אף בהעדרי(נו). והנני(נו) מבקש(ים) מבית המשפט לשפוט אותי(נו) שלא בפני(נו) וכי אהיה מיוצג(ים) על ידי בא(י) כחי הנ"ל.</li>
+    <li>לנהל את משפטי(נו) הנ"ל לפי ראות עיניהם ובכלל זה לעשות את כל הצעדים שימצאו לנכון ומועיל בקשר עם המשפט הנ"ל, והנני(נו) מאשר(ים) את מעשי בא(י) כוחי(נו) אלה מראש.</li>
+    <li>והנני(נו) מסכים(ים), כי כל אחד ממורשי(נו) הנ"ל יהא רשאי להרשות כל עורך דין או עורכי דין אחר(ים) לשמש תחתיו בכל משא ומתן משפטי לפי יפוי כח זה ולחתום על כל המסמכים הדרושים ו/או המועלים בקשר אליו ולהעביר יפוי כח זה על כל הסמכויות שבו או חלק מהן לעו"ד אחר.</li>
+    <li>הנני(נו) מוותר(ים) על ההגנות המסורות לי(נו) לפי חוק הגנת הפרטיות, התשמ"א-1981 ומבקש(ים) מכל בעל מאגר מידע או מחזיקו לאפשר לבאי כחי(נו) הנ"ל לעיין במידע אודותיי(נו) והמצוי אצלם.</li>
+  </ol>
+
+  <p style="margin-top:20px">ולראיה באתי(נו) על החתום, היום <strong>${dd}</strong> לחודש <strong>${heMonths[mm]}</strong> שנת <strong>${yyyy}</strong></p>
+
+  <div class="sig-area">
+    <div class="sig-box">
+      ${sigData ? `<img src="${sigData}" alt="חתימה">` : '<div style="height:80px"></div>'}
+      <div class="sig-label">חתימה</div>
+    </div>
+    <div class="sig-box">
+      <div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:13pt;font-weight:600">${todaySimple}</div>
+      <div class="sig-label">תאריך</div>
+    </div>
+  </div>
+
+  <p style="margin-top:20px;font-size:10pt">הנני מאשר את החתימה(ות) הנ"ל</p>
+</div>
+<div class="footer">
+  BML LAW &nbsp;|&nbsp; bettylaw.co.il &nbsp;|&nbsp; מסמך זה הופק דיגיטלית ותקף כחתימה אלקטרונית
+</div>
+<script>
+  window.onload = function() {
+    window.print();
+  };
+<\/script>
+</body>
+</html>`;
+
+  // Open in new window and print to PDF
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+
+// ═══════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════
+let chatOpen=false;
+const replies=['תודה! נציג יחזור אליך בהקדם.','ניתן גם להתקשר ישירות למשרד.','אנחנו מטפלים בכל סוגי דוחות תנועה.','תהליך ההשגה לוקח 2-4 שבועות בממוצע.','שכר הטרחה רק בהצלחה!'];
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chat-panel').classList.toggle('on',chatOpen);
+  document.getElementById('cp-pill').style.display=chatOpen?'none':'block';
+}
+function sendChat(){
+  const inp=document.getElementById('cp-in');
+  const msg=inp.value.trim(); if(!msg)return;
+  const c=document.getElementById('cp-msgs');
+  c.innerHTML+=`<div class="cm usr">${msg}</div>`;
+  inp.value='';
+  setTimeout(()=>{ c.innerHTML+=`<div class="cm bot">${replies[Math.floor(Math.random()*replies.length)]}</div>`; c.scrollTop=c.scrollHeight; },800);
+  c.scrollTop=c.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════
+function openAdm(){ document.getElementById('adm-ov').classList.add('on'); renderAdm(); }
+function closeAdm(){ document.getElementById('adm-ov').classList.remove('on'); }
+function renderAdm(){
+  const tb=document.getElementById('adm-tb');
+  if(!leads.length){ tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:28px">אין לידים עדיין</td></tr>`; return; }
+  tb.innerHTML=leads.map(l=>`<tr>
+    <td>${l.date}</td>
+    <td style="color:white;font-weight:600">${l.name}</td>
+    <td>${l.ticketNum}</td>
+    <td style="color:var(--gold)">${l.amount}</td>
+    <td><span class="sbadge s-${l.status==='new'?'new':'done'}">${l.status==='new'?'חדש':'טופל'}</span></td>
+    <td><a class="al" href="${l.driveUrl}" target="_blank">📁 Drive</a></td>
+    <td><a class="al" href="${l.sfUrl}" target="_blank">☁️ SF</a></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+go(1);
+</script>
+</body>
+</html>
